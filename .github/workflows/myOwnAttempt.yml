@@ -1,0 +1,49 @@
+# This is the name of the workflow
+
+name : multistage_workflow
+
+# Running on...
+on:
+  # all push requests
+  push:
+    branches : ["main"]
+  # and on manual triggering the workflow
+  workflow_dispatch:
+
+# Workflows run in parallel but we want to make the following stages
+# 1. Build
+# 2. Tests depending on build
+# 3. Prod depending on tests
+
+jobs:
+  build:
+    # Running on Ubuntu server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'This is the build job running'
+        shell: pwsh
+        run: |
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          dotnet build --configuration Release --output ./output
+          popd
+  
+  test:
+    # Depends on build
+    needs: build
+    
+    # Running on Ubuntu server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'This is the test running'
+  
+  prod:
+    # Depends on test
+    needs: test
+    
+    # Running on Ubuntu server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'Pushing to production environment'
